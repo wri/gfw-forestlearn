@@ -1,78 +1,64 @@
-import subprocess
-import argparse
-import learn2map.raster_tools as rt
-from azureml.core import Run
-import gdal
-import argparse
 import pandas as pd
 import numpy as np
-import glob
-import rasterio
-import gdal
-import os
-import datetime
-import csv
-import random
+import pickle
 
-from sklearn.model_selection import cross_val_score
-from sklearn import metrics
-from sklearn import svm
-from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
-from sklearn.pipeline import FeatureUnion
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
 from sklearn.compose import ColumnTransformer
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import mean_squared_error
-from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.decomposition import PCA
-from sklearn.feature_selection import SelectFromModel
-from sklearn.svm import LinearSVR
-from sklearn.model_selection import StratifiedKFold
-from sklearn.model_selection import validation_curve
-from sklearn.neural_network import MLPClassifier
-from sklearn.utils import resample
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import f1_score
-from sklearn.metrics import precision_score
-from sklearn.metrics import recall_score
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import roc_auc_score
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.model_selection import cross_val_score,train_test_split,GridSearchCV, StratifiedKFold,validation_curve
+from sklearn.metrics import mean_squared_error,confusion_matrix,f1_score,precision_score,recall_score,accuracy_score,roc_auc_score
 
 import xgboost as xgb
-import pickle
-import math
-import datetime
-import warnings
-from shutil import copyfile
-import csv
-import subprocess
-import argparse
-import os
-import numpy as np
-import learn2map.raster_tools as rt
-import pandas as pd
-import glob
-import rasterio
-from osgeo import gdal
-from azureml.core import Run
-from sklearn.model_selection import train_test_split
-import multiprocessing as mp
-from sklearn.utils import resample
-from multiprocessing import Pool #  Process pool
-from multiprocessing import sharedctypes
-import tqdm
-import sys
-import math
-import shutil
+
+
+# import glob
+# import os
+# import subprocess
+# import argparse
+# import argparse
+# import pandas as pd
+# import numpy as np
+# import glob
+# import os
+# import datetime
+# import csv
+# import random
+#
+# from sklearn import metrics
+# from sklearn import svm
+# from sklearn.pipeline import Pipeline, FeatureUnion
+# from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
+# from sklearn.compose import ColumnTransformer
+# from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+# from sklearn.base import BaseEstimator, TransformerMixin
+# from sklearn.decomposition import PCA
+# from sklearn.feature_selection import SelectFromModel
+# from sklearn.svm import LinearSVR
+# from sklearn.model_selection import cross_val_score,train_test_split,GridSearchCV, StratifiedKFold,validation_curve
+# from sklearn.neural_network import MLPClassifier
+# from sklearn.utils import resample
+# from sklearn.metrics import mean_squared_error,confusion_matrix,f1_score,precision_score,recall_score,accuracy_score,roc_auc_score
+#
+# 
+# import math
+# import datetime
+# import warnings
+# from shutil import copyfile
+# import multiprocessing as mp
+# from multiprocessing import Pool #  Process pool
+# from multiprocessing import sharedctypes
+# import tqdm
+# import sys
+# import math
+# import shutil
 
 class ForestLearn(object):
     """
     Build machine learning object that can find the best parameters for final run.
 
     """
-    def __init__(self, predictors=[], y_column=None, xy = ['x','y'], cat_feats = [], one_hot_feats = []):
+    def __init__(self, predictors=[], y_column=None, xy = [], cat_feats = [], one_hot_feats = []):
         """
         :param in_file: input h5 file that contains the training data
         :param y_column: column index for response variable y
@@ -159,6 +145,7 @@ class ForestLearn(object):
         
         cv_results_df = pd.DataFrame.from_dict(grid_search.cv_results_)
         cv_results_df.to_csv(cv_results_filename,index=False)
+        return self.mdl
         
         
     def fit_model_with_params(self, train, out_modelfilename, in_params=None, in_modelfilename=None): 
