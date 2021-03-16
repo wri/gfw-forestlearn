@@ -155,6 +155,7 @@ class ForestLearn(object):
         # If in_params is given, load parameters for "learn" machine learning part of the pipeline
         elif in_params:
             self.mdl.named_steps['learn'].set_params(**in_params)
+            params = in_params
         # If in_modelfilename is given, load parameters from modelfile for "learn" machine learning part of the pipeline
         elif in_modelfilename:
             in_model = pickle.load(open(in_modelfilename, 'rb'))
