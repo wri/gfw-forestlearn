@@ -93,6 +93,9 @@ class ForestLearn(object):
         self.actual_positive = {}
         self.predicted_negative = {} 
         self.predicted_positive = {}
+        self.actual_rate = {}
+        self.predicted_rate = {}
+        self.rmse = {}
 
     def get_column_names_from_ColumnTransformer(self):    
         column_transformer = self.mdl.named_steps['preprocess']
@@ -326,6 +329,9 @@ class ForestLearn(object):
             
         tn, fp, fn, tp = confusion_matrix(y_true_all, y_hat_all).ravel()
         
+        self.rmse[name] = mean_squared_error(y_true_all, y_prob_all)
+        self.actual_rate[name] = np.mean(y_true_all)
+        self.predicted_rate[name] = np.mean(y_prob_all)
         self.actual_positive[name] = np.sum(y_true_all>0)
         self.actual_negative[name] = np.sum(y_true_all==0)
         self.predicted_positive[name] = np.sum(y_hat_all>0)
@@ -342,11 +348,12 @@ class ForestLearn(object):
         
 
     def save_scores(self, out_file):
-        dict_list = [self.actual_positive, self.actual_negative, self.predicted_positive, self.predicted_negative, 
+        dict_list = [self.rmse, self.actual_rate, self.predicted_rate, self.actual_positive, self.actual_negative, self.predicted_positive, self.predicted_negative, 
                         self.true_negative, self.true_positive, self.false_positive, self.false_negative, self.precision, 
                         self.recall, self.f1, self.accuracy, self.roc_auc]
         df = pd.DataFrame(dict_list)
-        df.insert(0, 'score', ['actual_positive','actual_negative','predicted_positive','predicted_negative',
+        df.insert(0, 'score', ['rmse','actual_rate','predicted_rate','actual_positive','actual_negative',
+                                'predicted_positive','predicted_negative',
                                'true_negative','true_positive', 'false_positive','false_negative','precision',
                                'recall','f1','accuracy','roc_auc'])
         df.to_csv(out_file)
