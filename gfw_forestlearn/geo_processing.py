@@ -152,21 +152,6 @@ def convert_hdf(in_file_list,out_file_name):
     raster_to_h5(out_vrt, out_h5, field_names, mask_column, mask_valid_range=0, lines=1000, drop_nan=True)
     
     
-
-def get_reference_coordinates(df, reference_raster_file, in_lat_name='y', in_lon_name = 'x', out_lat_name = 'Lat_1km', out_lon_name = 'Lon_1km'):
-    """
-    #Function to find the coordinates of a lower resolution raster
-    """
-    out_df = df.copy()
-    src = rasterio.open(reference_raster_file)
-    metadata = src.meta
-    for i,row in out_df.iterrows():
-        raster_row, raster_column = rasterio.transform.rowcol(metadata.get('transform'), row[in_lon_name], row[in_lat_name])
-        ref_coords = rasterio.transform.xy(metadata.get('transform'), raster_row, raster_column, offset='center')
-        out_df.at[i,out_lon_name] = ref_coords[0]
-        out_df.at[i,out_lat_name] = ref_coords[1]
-
-
 def stratify_split(df, stratify_column, test_size = 0.2):
     """
     #Stratify split dataframe
@@ -188,10 +173,39 @@ def save_point_df_and_shp(df, out_prefix, x_field, y_field, out_crs='epsg:4326')
     gdf.to_file('{}.shp'.format(out_prefix))
     return None
    
-
+def get_reference_coordinates(df, reference_raster_file, in_lat_name='y', in_lon_name = 'x', out_lat_name = 'Lat_1km', out_lon_name = 'Lon_1km'):
+    """
+    #Function to add coordinates of point locations from reference raster with desired resolution and projection
+    
+    Args:
+    df: DataFrame of points with x,y or longitude,latitude coordinates
+    reference_raster_file: Reference raster with desired resolution and projection
+    in_lat_name: Latitude or y column-name in df
+    in_lon_name: Longitude or x column-name in df
+    out_lat_name: New reference latitude or y column-name in output df
+    out_lon_name: New reference longitude or x column-name in output df
+    
+    Returns:
+    New dataframe with coordinates from reference raster
+    """
+    out_df = df.copy()
+    src = rasterio.open(reference_raster_file)
+    metadata = src.meta
+    for i,row in out_df.iterrows():
+        raster_row, raster_column = rasterio.transform.rowcol(metadata.get('transform'), row[in_lon_name], row[in_lat_name])
+        ref_coords = rasterio.transform.xy(metadata.get('transform'), raster_row, raster_column, offset='center')
+        out_df.at[i,out_lon_name] = ref_coords[0]
+        out_df.at[i,out_lat_name] = ref_coords[1]
+    return out_df
+        
 def average_plots_with_matching_coords(df, x_field, y_field):
     """
     #Average plot values within matching coordinates (use after get_reference_coordinates) 
+    
+    Args:
+    df: DataFrame of points with x,y coordinates
+    x_field: x column-name in df
+    y_field: y column-name in df
     """
     average_plots = pd.DataFrame(columns=list(df))
     coordinates = df[[y_field,x_field]].drop_duplicates()
@@ -208,18 +222,18 @@ def average_plots_with_matching_coords(df, x_field, y_field):
     return average_plots
 
 
-def find_matching_plot_coords(unique_df,df, x_field, y_field):
-    """
-    Find plots that are in the same pixel
-    """
-    #unique_df = df[[x_field,y_field]].drop_duplicates()
-    match_df = pd.DataFrame(columns=list(df))
-    for i, row in unique_df.iterrows():
-        lat = row[y_field]
-        lon = row[x_field]
-        match_rows = df[(df[y_field]==lat)&(df[x_field]==lon)]
-        match_df = match_df.append(match_rows, ignore_index = True)
-    return match_df
+# def find_matching_plot_coords(unique_df,df, x_field, y_field):
+#     """
+#     Find plots that are in the same pixel
+#     """
+#     #unique_df = df[[x_field,y_field]].drop_duplicates()
+#     match_df = pd.DataFrame(columns=list(df))
+#     for i, row in unique_df.iterrows():
+#         lat = row[y_field]
+#         lon = row[x_field]
+#         match_rows = df[(df[y_field]==lat)&(df[x_field]==lon)]
+#         match_df = match_df.append(match_rows, ignore_index = True)
+#     return match_df
         
 
 def sample_raster_at_point_location(args):
